@@ -1,0 +1,60 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What is the customer's primary business goal?",
+      "type": "single",
+      "options": [
+        { "id": "a", "text": "Minimize cost" },
+        { "id": "b", "text": "Maximize performance", "image": "images/performance.svg" },
+        { "id": "c", "text": "Ensure high availability" }
+      ]
+    },
+    {
+      "id": "q2",
+      "text": "How many users will access the system concurrently?",
+      "type": "single",
+      "options": [
+        { "id": "a", "text": "Fewer than 10" },
+        { "id": "b", "text": "10 to 50" },
+        { "id": "c", "text": "More than 50" }
+      ]
+    },
+    {
+      "id": "q3",
+      "text": "What is the expected data workload?",
+      "type": "single",
+      "options": [
+        { "id": "a", "text": "Light workload" },
+        { "id": "b", "text": "Moderate workload" },
+        { "id": "c", "text": "Heavy workload" }
+      ]
+    }
+  ],
+  "configMapping": [
+    {
+      "answers": { "q1": "b", "q2": "c", "q3": "c" },
+      "result": {
+        "name": "Premium Performance Cluster",
+        "description": "Best for high-performance customers with heavy workloads and large concurrent user counts.",
+        "sku": "RESYS-HP-CLUSTER"
+      }
+    },
+    {
+      "answers": { "q1": "c", "q2": "b" },
+      "result": {
+        "name": "High Availability Configuration",
+        "description": "Balanced system with redundancy and failover for reliable customer operations.",
+        "sku": "RESYS-HA-01"
+      }
+    },
+    {
+      "answers": { "q1": "a" },
+      "result": {
+        "name": "Cost-Optimized Package",
+        "description": "A lower-cost configuration designed for small teams or limited budgets.",
+        "sku": "RESYS-COST-01"
+      }
+    }
+  ]
+}

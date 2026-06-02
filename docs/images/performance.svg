@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+  <rect width="240" height="120" rx="18" fill="#2563eb" />
+  <path d="M32 88 L60 60 L92 84 L118 48 L146 76 L178 40" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" />
+  <text x="120" y="30" fill="#fff" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">Performance</text>
+</svg>
