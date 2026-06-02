@@ -23,20 +23,39 @@ function loadQuestions() {
 }
 
 function findBestConfig(answers, configMapping) {
+  let bestMatch = null;
+  let bestScore = -1;
+  let bestRuleSize = -1;
+
   for (const mapping of configMapping) {
     const rule = mapping.answers || {};
-    let matches = true;
-    for (const questionId of Object.keys(rule)) {
-      if (answers[questionId] !== rule[questionId]) {
-        matches = false;
-        break;
+    const ruleKeys = Object.keys(rule);
+    let matchCount = 0;
+
+    for (const questionId of ruleKeys) {
+      if (answers[questionId] === rule[questionId]) {
+        matchCount += 1;
       }
     }
-    if (matches) {
-      return mapping.result;
+
+    if (matchCount > bestScore || (matchCount === bestScore && ruleKeys.length > bestRuleSize)) {
+      bestScore = matchCount;
+      bestRuleSize = ruleKeys.length;
+      bestMatch = { mapping, matchCount, ruleSize: ruleKeys.length };
     }
   }
-  return null;
+
+  if (!bestMatch || bestScore <= 0) {
+    return null;
+  }
+
+  const exactMatch = bestMatch.matchCount === bestMatch.ruleSize;
+  return {
+    result: bestMatch.mapping.result,
+    exactMatch,
+    matchedCount: bestMatch.matchCount,
+    ruleCount: bestMatch.ruleSize,
+  };
 }
 
 app.get('/api/questions', (req, res) => {
@@ -47,9 +66,9 @@ app.get('/api/questions', (req, res) => {
 app.post('/api/evaluate', (req, res) => {
   const data = loadQuestions();
   const answers = req.body.answers || {};
-  const result = findBestConfig(answers, data.configMapping || []);
-  if (result) {
-    res.json({ success: true, result });
+  const match = findBestConfig(answers, data.configMapping || []);
+  if (match) {
+    res.json({ success: true, ...match });
   } else {
     res.json({ success: false, message: 'No matching configuration found. Please review the answers or update the mapping rules.' });
   }
