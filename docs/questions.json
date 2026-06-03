@@ -6,7 +6,7 @@
       "type": "single",
       "options": [
         { "id": "a", "text": "Minimize cost" },
-        { "id": "b", "text": "Maximize performance", "image": "images/performance.svg" },
+        { "id": "b", "text": "Maximize performance", "image": "images/test.png" },
         { "id": "c", "text": "Ensure high availability" }
       ]
     },
@@ -16,7 +16,7 @@
       "type": "single",
       "options": [
         { "id": "a", "text": "Fewer than 10" },
-        { "id": "b", "text": "10 to 50" },
+        { "id": "b", "text": "10 to 50","image": "images/test.png" },
         { "id": "c", "text": "More than 50" }
       ]
     },
@@ -28,6 +28,15 @@
         { "id": "a", "text": "Light workload" },
         { "id": "b", "text": "Moderate workload" },
         { "id": "c", "text": "Heavy workload" }
+      ]
+    },
+    {
+      "id": "q4",
+      "text": "Testing",
+      "type": "single",
+      "options": [
+        { "id": "a", "text": "Test" },
+        { "id": "b", "text": "Test" }
       ]
     }
   ],

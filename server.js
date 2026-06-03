@@ -22,40 +22,42 @@ function loadQuestions() {
   }
 }
 
-function findBestConfig(answers, configMapping) {
-  let bestMatch = null;
-  let bestScore = -1;
-  let bestRuleSize = -1;
+function evaluateConfigs(answers, questions, configMapping) {
+  const totalQuestions = Array.isArray(questions) ? questions.length : 0;
+  const recommendations = [];
 
   for (const mapping of configMapping) {
     const rule = mapping.answers || {};
     const ruleKeys = Object.keys(rule);
-    let matchCount = 0;
+    let matchedCount = 0;
 
     for (const questionId of ruleKeys) {
       if (answers[questionId] === rule[questionId]) {
-        matchCount += 1;
+        matchedCount += 1;
       }
     }
 
-    if (matchCount > bestScore || (matchCount === bestScore && ruleKeys.length > bestRuleSize)) {
-      bestScore = matchCount;
-      bestRuleSize = ruleKeys.length;
-      bestMatch = { mapping, matchCount, ruleSize: ruleKeys.length };
-    }
+    const exactMatch = ruleKeys.length > 0 && matchedCount === ruleKeys.length;
+    const fitScore = totalQuestions > 0 ? Math.round((matchedCount / totalQuestions) * 100) : 0;
+    const ruleMatchScore = ruleKeys.length > 0 ? Math.round((matchedCount / ruleKeys.length) * 100) : 0;
+
+    recommendations.push({
+      result: mapping.result,
+      matchedCount,
+      ruleCount: ruleKeys.length,
+      exactMatch,
+      fitScore,
+      ruleMatchScore,
+    });
   }
 
-  if (!bestMatch || bestScore <= 0) {
-    return null;
-  }
+  recommendations.sort((a, b) => {
+    if (b.matchedCount !== a.matchedCount) return b.matchedCount - a.matchedCount;
+    if (b.ruleCount !== a.ruleCount) return b.ruleCount - a.ruleCount;
+    return b.fitScore - a.fitScore;
+  });
 
-  const exactMatch = bestMatch.matchCount === bestMatch.ruleSize;
-  return {
-    result: bestMatch.mapping.result,
-    exactMatch,
-    matchedCount: bestMatch.matchCount,
-    ruleCount: bestMatch.ruleSize,
-  };
+  return recommendations;
 }
 
 app.get('/api/questions', (req, res) => {
@@ -66,12 +68,19 @@ app.get('/api/questions', (req, res) => {
 app.post('/api/evaluate', (req, res) => {
   const data = loadQuestions();
   const answers = req.body.answers || {};
-  const match = findBestConfig(answers, data.configMapping || []);
-  if (match) {
-    res.json({ success: true, ...match });
-  } else {
-    res.json({ success: false, message: 'No matching configuration found. Please review the answers or update the mapping rules.' });
+  const recommendations = evaluateConfigs(answers, data.questions || [], data.configMapping || []);
+
+  if (!recommendations.length || recommendations[0].matchedCount <= 0) {
+    res.json({
+      success: false,
+      message: 'No matching configuration found. Please review the answers or update the mapping rules.',
+      recommendations,
+    });
+    return;
   }
+
+  const bestMatch = recommendations[0];
+  res.json({ success: true, bestMatch, recommendations });
 });
 
 app.get('*', (req, res) => {

@@ -7,6 +7,7 @@ function App() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('questions');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     fetch('/api/questions')
@@ -21,18 +22,9 @@ function App() {
       });
   }, []);
 
-  const handleSelect = (questionId, optionId) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-  };
-
-  const getOptionText = (questionId, optionId) => {
-    const question = questionsData?.questions.find((q) => q.id === questionId);
-    return question?.options.find((option) => option.id === optionId)?.text || optionId;
-  };
-
-  const handleSubmit = () => {
+  const submitAnswers = (finalAnswers) => {
     if (!questionsData) return;
-    const missing = questionsData.questions.filter((q) => !answers[q.id]);
+    const missing = questionsData.questions.filter((q) => !finalAnswers[q.id]);
     if (missing.length) {
       setError('Please answer all questions before evaluating.');
       setResult(null);
@@ -42,12 +34,12 @@ function App() {
     fetch('/api/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({ answers: finalAnswers }),
     })
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          setResult({ ...data.result, exactMatch: data.exactMatch });
+          setResult({ ...data.bestMatch, recommendations: data.recommendations });
           setView('result');
           setError('');
         } else {
@@ -61,11 +53,63 @@ function App() {
       });
   };
 
+  const handleSelect = (questionId, optionId) => {
+    const nextAnswers = { ...answers, [questionId]: optionId };
+    setAnswers(nextAnswers);
+    setError('');
+    const lastIndex = questionsData.questions.length - 1;
+    if (currentQuestionIndex < lastIndex) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      submitAnswers(nextAnswers);
+    }
+  };
+
+  const resolveImageSrc = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
+      return imagePath;
+    }
+    return `/docs/${imagePath}`;
+  };
+
+  const getOptionText = (questionId, optionId) => {
+    const question = questionsData?.questions.find((q) => q.id === questionId);
+    return question?.options.find((option) => option.id === optionId)?.text || optionId;
+  };
+
+  const handleNext = () => {
+    const currentQuestion = questionsData.questions[currentQuestionIndex];
+    if (!answers[currentQuestion.id]) {
+      setError('Please choose an answer before moving forward.');
+      return;
+    }
+    setError('');
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex < questionsData.questions.length) {
+      setCurrentQuestionIndex(nextIndex);
+    } else {
+      submitAnswers(answers);
+    }
+  };
+
+  const handleBack = () => {
+    setError('');
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleSubmit = () => {
+    submitAnswers(answers);
+  };
+
   const handleReset = () => {
     setAnswers({});
     setResult(null);
     setError('');
     setView('questions');
+    setCurrentQuestionIndex(0);
   };
 
   if (loading) {
@@ -76,29 +120,56 @@ function App() {
     return React.createElement('div', { className: 'card' }, React.createElement('p', null, 'Question data unavailable.'));
   }
 
-  const questionCards = questionsData.questions.map((question) =>
+  const currentQuestion = questionsData.questions[currentQuestionIndex];
+  const selectedOption = answers[currentQuestion.id];
+
+  const questionCards = React.createElement(
+    'div',
+    { className: 'card question' },
+    React.createElement('div', { className: 'question-step' }, `Question ${currentQuestionIndex + 1} of ${questionsData.questions.length}`),
+    currentQuestion.image && React.createElement('img', { className: 'question-image', src: resolveImageSrc(currentQuestion.image), alt: currentQuestion.text }),
+    React.createElement('div', { className: 'question-title' }, currentQuestion.text),
     React.createElement(
       'div',
-      { key: question.id, className: 'card question' },
-      React.createElement('div', { className: 'question-title' }, question.text),
-      React.createElement(
-        'div',
-        { className: 'options' },
-        question.options.map((option) => {
-          const selected = answers[question.id] === option.id;
-          return React.createElement(
-            'button',
-            {
-              key: option.id,
-              className: `option-button${selected ? ' selected' : ''}`,
-              type: 'button',
-              onClick: () => handleSelect(question.id, option.id),
-            },
-            React.createElement('div', null, option.text),
-            option.image && React.createElement('img', { className: 'option-image', src: option.image, alt: option.text }),
-          );
-        }),
-      ),
+      { className: 'option-image-grid' },
+      currentQuestion.options.map((option) => {
+        const selected = selectedOption === option.id;
+        return React.createElement(
+          'button',
+          {
+            key: option.id,
+            className: `option-image-card${selected ? ' selected' : ''}`,
+            type: 'button',
+            onClick: () => handleSelect(currentQuestion.id, option.id),
+          },
+          option.image
+            ? React.createElement('img', { src: resolveImageSrc(option.image), alt: option.text })
+            : React.createElement('div', { style: { height: '180px', background: '#f8fafc' } }),
+        );
+      }),
+    ),
+    React.createElement(
+      'div',
+      { className: 'option-buttons' },
+      currentQuestion.options.map((option) => {
+        const selected = selectedOption === option.id;
+        return React.createElement(
+          'button',
+          {
+            key: `button-${option.id}`,
+            className: `option-button${selected ? ' selected' : ''}`,
+            type: 'button',
+            onClick: () => handleSelect(currentQuestion.id, option.id),
+          },
+          option.text,
+        );
+      }),
+    ),
+    React.createElement(
+      'div',
+      { className: 'actions nav-buttons' },
+      React.createElement('button', { className: 'button secondary', type: 'button', disabled: currentQuestionIndex === 0, onClick: handleBack }, 'Back'),
+      React.createElement('button', { className: 'button primary', type: 'button', onClick: handleNext, disabled: !selectedOption }, currentQuestionIndex === questionsData.questions.length - 1 ? 'Submit' : 'Next'),
     ),
   );
 
@@ -120,6 +191,8 @@ function App() {
     ),
   );
 
+  const alternativeRecommendations = result?.recommendations?.slice(1, 3) || [];
+
   const resultPage = React.createElement(
     'div',
     null,
@@ -137,6 +210,13 @@ function App() {
     ),
     React.createElement(
       'div',
+      { className: 'result-banner' },
+      result?.image
+        ? React.createElement('img', { src: resolveImageSrc(result.image), alt: result.name })
+        : React.createElement('div', null, 'Your recommended configuration is ready below'),
+    ),
+    React.createElement(
+      'div',
       { className: 'card result-card' },
       result
         ? React.createElement(
@@ -150,10 +230,43 @@ function App() {
               !result.exactMatch && React.createElement('span', { style: { display: 'block', marginTop: '10px', color: '#475569' } }, 'This recommendation is based on the closest available match.'),
             ),
             result.sku && React.createElement('p', null, React.createElement('strong', null, 'SKU:'), ' ', result.sku),
+            React.createElement(
+              'p',
+              null,
+              React.createElement('strong', null, 'Fit score:'),
+              ' ',
+              `${result.fitScore}%`,
+            ),
+            React.createElement(
+              'p',
+              null,
+              React.createElement('strong', null, 'Criteria matched:'),
+              ' ',
+              `${result.matchedCount}/${result.ruleCount} (${result.ruleMatchScore}%)`,
+            ),
           )
         : React.createElement('p', null, 'No configuration matched. Please adjust your answers and try again.'),
     ),
     answerSummary,
+    answerSummary,
+    alternativeRecommendations.length > 0 && React.createElement(
+      'div',
+      { className: 'card result-card' },
+      React.createElement('h3', null, 'Other Recommendations'),
+      React.createElement(
+        'ul',
+        null,
+        alternativeRecommendations.map((alt, index) =>
+          React.createElement(
+            'li',
+            { key: `alt-${index}`, style: { marginBottom: '16px' } },
+            React.createElement('strong', null, alt.result.name),
+            React.createElement('div', null, alt.result.description),
+            React.createElement('div', { style: { color: '#475569', marginTop: '4px' } }, `Fit score: ${alt.fitScore}% — Criteria matched: ${alt.matchedCount}/${alt.ruleCount}`),
+          ),
+        ),
+      ),
+    ),
     React.createElement(
       'div',
       { className: 'actions' },
@@ -172,7 +285,7 @@ function App() {
           React.createElement(
             'div',
             { className: 'card header' },
-            React.createElement('h1', null, 'RESYS Sales Configuration Wizard'),
+            React.createElement('h1', null, 'ABI Sales Configuration Wizard'),
             React.createElement('p', null, 'Answer a few quick questions to recommend the best system configuration for your customer.'),
           ),
           questionCards,
