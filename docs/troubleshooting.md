@@ -17,3 +17,10 @@ Troubleshooting — RESYS Quiz Tool
 
 Contact
 - For further help, open an issue in the repository or contact the RESYS tooling owner.
+
+Port in use error
+```
+netstat -ano | findstr :3000
+Find last 5 numbers
+taskkill /PID 12345 /F
+```

@@ -6,10 +6,12 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('questions');
+  const [view, setView] = useState('landing');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+
   useEffect(() => {
+    //call the back end route
     fetch('/api/questions')
       .then((response) => response.json())
       .then((data) => {
@@ -21,24 +23,32 @@ function App() {
         setLoading(false);
       });
   }, []);
-
+  //Create function to submit answers to the back end for evaluation
   const submitAnswers = (finalAnswers) => {
+    //if questions data is not loaded, return
     if (!questionsData) return;
+    // checking for missing answers
     const missing = questionsData.questions.filter((q) => !finalAnswers[q.id]);
     if (missing.length) {
       setError('Please answer all questions before evaluating.');
+      // Clear previous result if any
       setResult(null);
       return;
     }
+    // Clear any previous error
     setError('');
     fetch('/api/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ answers: finalAnswers }),
     })
+      //Convert response to json 
+      //response: raw http
+      //data: the json body of the response
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
+          // copy bestMatch and recommendations to result state
           setResult({ ...data.bestMatch, recommendations: data.recommendations });
           setView('result');
           setError('');
@@ -53,6 +63,25 @@ function App() {
       });
   };
 
+  const landingPage = React.createElement(
+    'div',
+    { className: 'landing page' },
+    React.createElement(
+      'div',
+      { className: 'landing-logo', 'aria-label': 'ABI' },
+      React.createElement('span', null, 'ABI'),
+    ),
+    React.createElement('h1', null, 'Welcome to the ABI Configuration Wizard'),
+    React.createElement('p', null, 'Find the best system configuration for your customer.'),
+    React.createElement(
+      'button',
+      { className: 'button landing', 
+        type: 'button', 
+        onClick: () => setView('questions') },
+      'Start Here',
+    ),
+    React.createElement('p', null, 'Estimate time to complete: 2-3 minutes'),
+  );
   const handleSelect = (questionId, optionId) => {
     const nextAnswers = { ...answers, [questionId]: optionId };
     setAnswers(nextAnswers);
@@ -67,6 +96,7 @@ function App() {
 
   const resolveImageSrc = (imagePath) => {
     if (!imagePath) return null;
+    // If the path is already absolute (e.g., starts with http or /), return as is. Otherwise, prepend the docs path.
     if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
       return imagePath;
     }
@@ -108,7 +138,7 @@ function App() {
     setAnswers({});
     setResult(null);
     setError('');
-    setView('questions');
+    setView('landing');
     setCurrentQuestionIndex(0);
   };
 
@@ -126,6 +156,7 @@ function App() {
   const questionCards = React.createElement(
     'div',
     { className: 'card question' },
+    //Question progress number
     React.createElement('div', { className: 'question-step' }, `Question ${currentQuestionIndex + 1} of ${questionsData.questions.length}`),
     currentQuestion.image && React.createElement('img', { className: 'question-image', src: resolveImageSrc(currentQuestion.image), alt: currentQuestion.text }),
     React.createElement('div', { className: 'question-title' }, currentQuestion.text),
@@ -248,7 +279,6 @@ function App() {
         : React.createElement('p', null, 'No configuration matched. Please adjust your answers and try again.'),
     ),
     answerSummary,
-    answerSummary,
     alternativeRecommendations.length > 0 && React.createElement(
       'div',
       { className: 'card result-card' },
@@ -275,33 +305,40 @@ function App() {
     ),
   );
 
+  const quizPage = React.createElement(
+    React.Fragment,
+    null,
+    React.createElement(
+      'div',
+      { className: 'card header' },
+      React.createElement('h1', null, 'ABI Sales Configuration Wizard'),
+      React.createElement('p', null, 'Answer a few quick questions to recommend the best system configuration for your customer.'),
+    ),
+    questionCards,
+    React.createElement(
+      'div',
+      { className: 'card' },
+      error && React.createElement('p', { className: 'status', style: { color: '#b91c1c' } }, error),
+      React.createElement(
+        'div',
+        { className: 'actions' },
+        React.createElement('button', { className: 'button primary', type: 'button', onClick: handleSubmit }, 'Find Best Configuration'),
+        React.createElement('button', { className: 'button secondary', type: 'button', onClick: handleReset }, 'Reset Answers'),
+      ),
+    ),
+  );
+
+  let page = landingPage;
+  if (view === 'questions') {
+    page = quizPage;
+  } else if (view === 'result') {
+    page = resultPage;
+  }
+
   return React.createElement(
     'div',
     null,
-    view === 'questions'
-      ? React.createElement(
-          React.Fragment,
-          null,
-          React.createElement(
-            'div',
-            { className: 'card header' },
-            React.createElement('h1', null, 'ABI Sales Configuration Wizard'),
-            React.createElement('p', null, 'Answer a few quick questions to recommend the best system configuration for your customer.'),
-          ),
-          questionCards,
-          React.createElement(
-            'div',
-            { className: 'card' },
-            error && React.createElement('p', { className: 'status', style: { color: '#b91c1c' } }, error),
-            React.createElement(
-              'div',
-              { className: 'actions' },
-              React.createElement('button', { className: 'button primary', type: 'button', onClick: handleSubmit }, 'Find Best Configuration'),
-              React.createElement('button', { className: 'button secondary', type: 'button', onClick: handleReset }, 'Reset Answers'),
-            ),
-          ),
-        )
-      : resultPage,
+    page,
     React.createElement('div', { className: 'footer' }, 'Question logic is stored in docs/questions.json and can be updated by admin staff.'),
   );
 }
