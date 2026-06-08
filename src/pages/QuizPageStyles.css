@@ -1,0 +1,11 @@
+.quiz-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.quiz-logo img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}

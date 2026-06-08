@@ -5,11 +5,11 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const docsPath = path.join(__dirname, 'docs');
-const publicPath = path.join(__dirname, 'public');
+const distPath = path.join(__dirname, 'dist');
 const questionsPath = path.join(docsPath, 'questions.json');
 
 app.use(express.json());
-app.use(express.static(publicPath));
+app.use(express.static(distPath));
 app.use('/docs/images', express.static(path.join(docsPath, 'images')));
 
 function loadQuestions() {
@@ -84,7 +84,14 @@ app.post('/api/evaluate', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+  const indexPath = path.join(distPath, 'index.html');
+
+  if (!fs.existsSync(indexPath)) {
+    res.status(503).send('React app has not been built yet. Run "npm run build" before "npm start".');
+    return;
+  }
+
+  res.sendFile(indexPath);
 });
 
 app.listen(PORT, () => {

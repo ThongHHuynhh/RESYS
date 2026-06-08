@@ -2,16 +2,26 @@
   "questions": [
     {
       "id": "q1",
-      "text": "What is the customer's primary business goal?",
+      "text": "What type of bread you want to cut?",
       "type": "single",
       "options": [
-        { "id": "a", "text": "Minimize cost" },
-        { "id": "b", "text": "Maximize performance", "image": "images/test.png" },
-        { "id": "c", "text": "Ensure high availability" }
+        { "id": "a", "text": "Plunge blade", "image": "images/Ultrasonic plunge blade.png" },
+        { "id": "b", "text": "Waterjet", "image": "images/waterjet.png" },
+        { "id": "c", "text": "Drag blade", "image": "images/Ultrasonic drag blade.png" }
       ]
     },
     {
       "id": "q2",
+      "text": "What is the properties of your product?",
+      "type": "single",
+      "options": [
+        { "id": "a", "text": "Deep cut", "image": "images/Ultrasonic plunge blade.png" },
+        { "id": "b", "text": "Highly hydrated dough", "image": "images/waterjet.png" },
+        { "id": "c", "text": "Big seeds (Sunflower, etc,..) or a lot of flour", "image": "images/Ultrasonic drag blade.png" }
+      ]
+    },
+    {
+      "id": "q3",
       "text": "How many users will access the system concurrently?",
       "type": "single",
       "options": [
@@ -21,7 +31,7 @@
       ]
     },
     {
-      "id": "q3",
+      "id": "q4",
       "text": "What is the expected data workload?",
       "type": "single",
       "options": [
@@ -31,7 +41,7 @@
       ]
     },
     {
-      "id": "q4",
+      "id": "q5",
       "text": "Testing",
       "type": "single",
       "options": [
