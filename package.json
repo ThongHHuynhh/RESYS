@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "generate:config": "python scripts/generate_config_from_excel.py",
     "dev": "vite",
     "dev:server": "node server.js",
     "build": "vite build",

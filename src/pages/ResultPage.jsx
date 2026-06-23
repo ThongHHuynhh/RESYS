@@ -1,4 +1,6 @@
 import AnswerSummary from '../components/AnswerSummary.jsx';
+import ImageFrame from '../components/ImageFrame.jsx';
+import RecommendationPanel from '../components/RecommendationPanel.jsx';
 
 export default function ResultPage({
   answers,
@@ -12,8 +14,8 @@ export default function ResultPage({
   const alternativeRecommendations = result?.recommendations?.slice(1, 3) || [];
 
   return (
-    <div>
-      <div className="card header">
+    <main className="result-page">
+      <div className="card header result-header">
         <h1>{result?.exactMatch ? 'Recommended Configuration' : 'Closest Matching Configuration'}</h1>
         <p>
           {result?.exactMatch
@@ -24,40 +26,13 @@ export default function ResultPage({
 
       <div className="result-banner">
         {result?.image ? (
-          <img src={resolveImageSrc(result.image)} alt={result.name} />
+          <ImageFrame alt={result.name} src={resolveImageSrc(result.image)} variant="banner" />
         ) : (
           <div>Your recommended configuration is ready below</div>
         )}
       </div>
 
-      <div className="card result-card">
-        {result ? (
-          <>
-            <h2>{result.name}</h2>
-            <p>
-              {result.description}
-              {!result.exactMatch && (
-                <span style={{ display: 'block', marginTop: '10px', color: '#475569' }}>
-                  This recommendation is based on the closest available match.
-                </span>
-              )}
-            </p>
-            {result.sku && (
-              <p>
-                <strong>SKU:</strong> {result.sku}
-              </p>
-            )}
-            <p>
-              <strong>Fit score:</strong> {result.fitScore}%
-            </p>
-            <p>
-              <strong>Criteria matched:</strong> {result.matchedCount}/{result.ruleCount} ({result.ruleMatchScore}%)
-            </p>
-          </>
-        ) : (
-          <p>No configuration matched. Please adjust your answers and try again.</p>
-        )}
-      </div>
+      <RecommendationPanel result={result} />
 
       <AnswerSummary answers={answers} getOptionText={getOptionText} questions={questions} />
 
@@ -86,6 +61,6 @@ export default function ResultPage({
           Start Over
         </button>
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import LogoTransition from './components/LogoTransition.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
 import ResultPage from './pages/ResultPage.jsx';
@@ -12,11 +13,22 @@ export default function App() {
   const [view, setView] = useState('landing');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+  const getDefaultAnswers = (data) => {
+    const defaults = {};
+    for (const question of data?.questions || []) {
+      if (question.type === 'range' && question.defaultValue !== undefined) {
+        defaults[question.id] = question.defaultValue;
+      }
+    }
+    return defaults;
+  };
+
   useEffect(() => {
     fetch('/api/questions')
       .then((response) => response.json())
       .then((data) => {
         setQuestionsData(data);
+        setAnswers(getDefaultAnswers(data));
         setLoading(false);
       })
       .catch(() => {
@@ -25,10 +37,46 @@ export default function App() {
       });
   }, []);
 
+  const hasAnswer = (question, finalAnswers) => {
+    const value = finalAnswers[question.id];
+    if (Array.isArray(value)) return value.length > 0;
+    return value !== undefined && value !== null && value !== '';
+  };
+
+  const getDisabledReason = (questionId, optionId, sourceAnswers = answers) => {
+    const rules = questionsData?.conditionalRules || [];
+    const match = rules.find((rule) => {
+      if (rule.effect !== 'disable') return false;
+      if (rule.targetQuestionId !== questionId || rule.targetOptionId !== optionId) return false;
+      const sourceValue = sourceAnswers[rule.sourceQuestionId];
+      return Array.isArray(sourceValue)
+        ? sourceValue.includes(rule.sourceOptionId)
+        : sourceValue === rule.sourceOptionId;
+    });
+
+    return match?.message || '';
+  };
+
+  const pruneDisabledAnswers = (nextAnswers) => {
+    if (!questionsData?.questions) return nextAnswers;
+
+    const pruned = { ...nextAnswers };
+    for (const question of questionsData.questions) {
+      const value = pruned[question.id];
+      if (Array.isArray(value)) {
+        pruned[question.id] = value.filter((optionId) => !getDisabledReason(question.id, optionId, pruned));
+      } else if (value && getDisabledReason(question.id, value, pruned)) {
+        delete pruned[question.id];
+      }
+    }
+
+    return pruned;
+  };
+
   const submitAnswers = (finalAnswers) => {
     if (!questionsData) return;
 
-    const missing = questionsData.questions.filter((question) => !finalAnswers[question.id]);
+    const missing = questionsData.questions.filter((question) => question.required && !hasAnswer(question, finalAnswers));
     if (missing.length) {
       setError('Please answer all questions before evaluating.');
       setResult(null);
@@ -44,7 +92,7 @@ export default function App() {
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          setResult({ ...data.bestMatch, recommendations: data.recommendations });
+          setResult({ ...data.bestMatch.result, ...data.bestMatch, recommendations: data.recommendations });
           setView('result');
           setError('');
         } else {
@@ -59,16 +107,19 @@ export default function App() {
   };
 
   const handleSelect = (questionId, optionId) => {
-    const nextAnswers = { ...answers, [questionId]: optionId };
+    const question = questionsData.questions.find((item) => item.id === questionId);
+    let value = optionId;
+
+    if (question?.type === 'multi') {
+      const current = Array.isArray(answers[questionId]) ? answers[questionId] : [];
+      value = current.includes(optionId) ? current.filter((item) => item !== optionId) : [...current, optionId];
+    } else if (question?.type === 'range' && optionId !== '') {
+      value = Number(optionId);
+    }
+
+    const nextAnswers = pruneDisabledAnswers({ ...answers, [questionId]: value });
     setAnswers(nextAnswers);
     setError('');
-
-    const lastIndex = questionsData.questions.length - 1;
-    if (currentQuestionIndex < lastIndex) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      submitAnswers(nextAnswers);
-    }
   };
 
   const resolveImageSrc = (imagePath) => {
@@ -81,12 +132,19 @@ export default function App() {
 
   const getOptionText = (questionId, optionId) => {
     const question = questionsData?.questions.find((item) => item.id === questionId);
-    return question?.options.find((option) => option.id === optionId)?.text || optionId;
+    if (!question) return optionId;
+    if (question.type === 'range') return `${optionId} ${question.unit || ''}`.trim();
+    if (Array.isArray(optionId)) {
+      return optionId
+        .map((item) => question.options.find((option) => option.id === item)?.text || item)
+        .join(', ');
+    }
+    return question.options.find((option) => option.id === optionId)?.text || optionId;
   };
 
   const handleNext = () => {
     const currentQuestion = questionsData.questions[currentQuestionIndex];
-    if (!answers[currentQuestion.id]) {
+    if (!hasAnswer(currentQuestion, answers)) {
       setError('Please choose an answer before moving forward.');
       return;
     }
@@ -108,7 +166,7 @@ export default function App() {
   };
 
   const handleReset = () => {
-    setAnswers({});
+    setAnswers(getDefaultAnswers(questionsData));
     setResult(null);
     setError('');
     setView('landing');
@@ -134,7 +192,8 @@ export default function App() {
   const currentQuestion = questionsData.questions[currentQuestionIndex];
 
   return (
-    <div>
+    <div className={`app-shell view-${view}`}>
+      <LogoTransition compact={view !== 'landing'} />
       {view === 'landing' && <LandingPage onStart={() => setView('questions')} />}
 
       {view === 'questions' && (
@@ -143,6 +202,7 @@ export default function App() {
           currentQuestion={currentQuestion}
           currentQuestionIndex={currentQuestionIndex}
           error={error}
+          getDisabledReason={getDisabledReason}
           onBack={handleBack}
           onNext={handleNext}
           onReset={handleReset}

@@ -7,6 +7,7 @@ export default function QuizPage({
   currentQuestion,
   currentQuestionIndex,
   error,
+  getDisabledReason,
   onBack,
   onNext,
   onReset,
@@ -16,23 +17,13 @@ export default function QuizPage({
   resolveImageSrc,
 }) {
   return (
-    <>
-      {/* <div className="card header">
-        <h1>ABI Sales Configuration Wizard</h1>
-        <p>Answer a few quick questions to recommend the best system configuration for your customer.</p>
-      </div> */}
-      <div className="landing page">
-        <div className="quiz-page">
-          <div className="quiz-logo">
-            <img src="../../docs/images/abi-logo.png" alt="ABI Logo" />
-          </div>
-        </div>
-      </div>
+    <main className="quiz-workspace">
       <ProgressBar current={currentQuestionIndex + 1} total={questionsCount} />
       <QuestionCard
         answers={answers}
         currentQuestion={currentQuestion}
         currentQuestionIndex={currentQuestionIndex}
+        getDisabledReason={getDisabledReason}
         onBack={onBack}
         onNext={onNext}
         onSelect={onSelect}
@@ -40,7 +31,7 @@ export default function QuizPage({
         resolveImageSrc={resolveImageSrc}
       />
 
-      <div className="card">
+      <div className="card quiz-footer-card">
         {error && (
           <p className="status" style={{ color: '#b91c1c' }}>
             {error}
@@ -55,6 +46,6 @@ export default function QuizPage({
           </button>
         </div>
       </div>
-    </>
+    </main>
   );
 }

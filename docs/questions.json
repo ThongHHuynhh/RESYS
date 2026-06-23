@@ -1,79 +1,241 @@
 {
+  "sourceWorkbook": "src/Equipment Configurator.xlsx",
   "questions": [
     {
-      "id": "q1",
-      "text": "What type of bread you want to cut?",
+      "id": "support",
+      "excelColumn": "Q1",
+      "text": "What type of support do you use to score?",
+      "info": "The type of support will affect the tooling option",
       "type": "single",
+      "required": true,
+      "display": "image",
       "options": [
-        { "id": "a", "text": "Plunge blade", "image": "images/Ultrasonic plunge blade.png" },
-        { "id": "b", "text": "Waterjet", "image": "images/waterjet.png" },
-        { "id": "c", "text": "Drag blade", "image": "images/Ultrasonic drag blade.png" }
+        {
+          "id": "direct_product_on_belt",
+          "text": "Direct product on belt",
+          "image": "images/Direct product on belt.png",
+          "info": "The type of support will affect the tooling option"
+        },
+        {
+          "id": "peelboards",
+          "text": "Peelboards",
+          "image": "images/Peelboard.png",
+          "info": "The type of support will affect the tooling option"
+        },
+        {
+          "id": "fluted_pans",
+          "text": "Fluted pans",
+          "image": "images/Fluted tray.png",
+          "info": "The type of support will affect the tooling option"
+        },
+        {
+          "id": "flat_pans",
+          "text": "Flat pans",
+          "image": "images/Flat tray.png",
+          "info": "The type of support will affect the tooling option"
+        },
+        {
+          "id": "other_type_of_pans_dummy",
+          "text": "Other type of pans dummy",
+          "info": "The type of support will affect the tooling option"
+        }
       ]
     },
     {
-      "id": "q2",
-      "text": "What is the properties of your product?",
-      "type": "single",
+      "id": "product_settings",
+      "excelColumn": "Q2",
+      "text": "Do your product scoring needs any of the settings below:",
+      "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool",
+      "type": "multi",
+      "required": true,
+      "display": "list",
       "options": [
-        { "id": "a", "text": "Deep cut", "image": "images/Ultrasonic plunge blade.png" },
-        { "id": "b", "text": "Highly hydrated dough", "image": "images/waterjet.png" },
-        { "id": "c", "text": "Big seeds (Sunflower, etc,..) or a lot of flour", "image": "images/Ultrasonic drag blade.png" }
+        {
+          "id": "deep_cuts_5mm",
+          "text": "deep cuts (>5mm)",
+          "tags": [
+            "Limits waterjet"
+          ],
+          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+        },
+        {
+          "id": "highly_hydrated_dough_65_water",
+          "text": "highly hydrated dough (>65% water)",
+          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+        },
+        {
+          "id": "inclusions_with_big_seeds_sunflower_etc",
+          "text": "inclusions with big seeds (sunflower, etc)",
+          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+        },
+        {
+          "id": "highly_floured_products_or_belt",
+          "text": "highly floured products or belt",
+          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+        },
+        {
+          "id": "very_light_products_50g",
+          "text": "very light products (<50g)",
+          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+        },
+        {
+          "id": "others",
+          "text": "Others",
+          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+        }
       ]
     },
     {
-      "id": "q3",
-      "text": "How many users will access the system concurrently?",
-      "type": "single",
+      "id": "tool_options",
+      "excelColumn": "Q3",
+      "text": "What tool do you need:",
+      "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank",
+      "type": "multi",
+      "required": true,
+      "display": "image",
       "options": [
-        { "id": "a", "text": "Fewer than 10" },
-        { "id": "b", "text": "10 to 50","image": "images/test.png" },
-        { "id": "c", "text": "More than 50" }
+        {
+          "id": "ultrasonic_drag_blade",
+          "text": "Ultrasonic drag blade",
+          "image": "images/Ultrasonic drag blade.png",
+          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+        },
+        {
+          "id": "ultrasonic_plunge_blade",
+          "text": "Ultrasonic plunge blade",
+          "image": "images/Ultrasonic plunge blade.png",
+          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+        },
+        {
+          "id": "waterjet_tool",
+          "text": "Waterjet tool",
+          "image": "images/waterjet.png",
+          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+        },
+        {
+          "id": "custom_tool",
+          "text": "Custom tool",
+          "image": "images/test.png",
+          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+        }
       ]
     },
     {
-      "id": "q4",
-      "text": "What is the expected data workload?",
-      "type": "single",
+      "id": "production_rate",
+      "excelColumn": "Q4",
+      "text": "What is your maximum cutting  rate?",
+      "info": "Knowing the production rate will drive the number of robots needed",
+      "type": "range",
+      "required": true,
+      "min": 20,
+      "max": 2000,
+      "step": 10,
+      "defaultValue": 80,
+      "unit": "cuts/min",
       "options": [
-        { "id": "a", "text": "Light workload" },
-        { "id": "b", "text": "Moderate workload" },
-        { "id": "c", "text": "Heavy workload" }
+        {
+          "id": "between_20_and_2000",
+          "text": "Between 20 and 2000 cuts/min"
+        }
       ]
     },
     {
-      "id": "q5",
-      "text": "Testing",
+      "id": "conveyor_width",
+      "excelColumn": "Q5",
+      "text": "What is your conveyor width?",
+      "info": "The conveyor width will tell if a single or double robotic cell is needed",
       "type": "single",
+      "required": true,
+      "display": "list",
       "options": [
-        { "id": "a", "text": "Test" },
-        { "id": "b", "text": "Test" }
+        {
+          "id": "less_than_48_inches",
+          "text": "Less than 48 inches",
+          "info": "The conveyor width will tell if a single or double robotic cell is needed"
+        },
+        {
+          "id": "between_48_and_60_inches",
+          "text": "Between 48 and 60 inches",
+          "info": "The conveyor width will tell if a single or double robotic cell is needed"
+        },
+        {
+          "id": "more_than_60_inches",
+          "text": "More than 60 inches",
+          "info": "The conveyor width will tell if a single or double robotic cell is needed"
+        }
       ]
     }
   ],
-  "configMapping": [
+  "conditionalRules": [
     {
-      "answers": { "q1": "b", "q2": "c", "q3": "c" },
-      "result": {
-        "name": "Premium Performance Cluster",
-        "description": "Best for high-performance customers with heavy workloads and large concurrent user counts.",
-        "sku": "RESYS-HP-CLUSTER"
-      }
-    },
+      "id": "deep-cuts-disable-waterjet",
+      "sourceQuestionId": "product_settings",
+      "sourceOptionId": "deep_cuts_5mm",
+      "targetQuestionId": "tool_options",
+      "targetOptionId": "waterjet_tool",
+      "effect": "disable",
+      "message": "Waterjet tool is not available when deep cuts (>5mm) are selected."
+    }
+  ],
+  "recommendations": [
     {
-      "answers": { "q1": "c", "q2": "b" },
-      "result": {
-        "name": "High Availability Configuration",
-        "description": "Balanced system with redundancy and failover for reliable customer operations.",
-        "sku": "RESYS-HA-01"
-      }
-    },
-    {
-      "answers": { "q1": "a" },
-      "result": {
-        "name": "Cost-Optimized Package",
-        "description": "A lower-cost configuration designed for small teams or limited budgets.",
-        "sku": "RESYS-COST-01"
-      }
+      "id": "1_robot_with_drag_blade",
+      "name": "1 robot with drag blade",
+      "sku": "KATANA-II-DRAG-1R",
+      "image": "images/Ultrasonic drag blade.png",
+      "recommendedOption": "1 robot with drag blade",
+      "numberOfRobots": "Single cell",
+      "scoringPatternComplexity": "Single cut",
+      "description": "Dynamic fit calculated from workbook-derived scoring rules.",
+      "scopeLimitations": [
+        "ABB IRB1200 6-axis robot",
+        "80 cuts/min max (for simple parallel cuts)",
+        "40 inches on one side of the solution for installation and maintenance purposes",
+        "Good option for seeded and floured products",
+        "Very clean and accurate cuts thanks to ultrasonic technology",
+        "Mild steel frame"
+      ],
+      "rules": [
+        {
+          "questionId": "tool_options",
+          "operator": "includes",
+          "value": "ultrasonic_drag_blade",
+          "score": 40,
+          "label": "Ultrasonic drag blade selected"
+        },
+        {
+          "questionId": "conveyor_width",
+          "operator": "equals",
+          "value": "less_than_48_inches",
+          "score": 25,
+          "label": "Conveyor width is less than 48 inches"
+        },
+        {
+          "questionId": "production_rate",
+          "operator": "lte",
+          "value": 80,
+          "score": 25,
+          "label": "Production rate fits 80 cuts/min maximum"
+        },
+        {
+          "questionId": "product_settings",
+          "operator": "includesAny",
+          "value": [
+            "inclusions_with_big_seeds_sunflower_etc",
+            "highly_floured_products_or_belt"
+          ],
+          "score": 10,
+          "label": "Product characteristics fit drag blade strengths"
+        }
+      ],
+      "disqualifiers": [
+        {
+          "questionId": "tool_options",
+          "operator": "includes",
+          "value": "waterjet_tool",
+          "message": "This recommendation is for an ultrasonic drag blade, not waterjet."
+        }
+      ]
     }
   ]
 }
