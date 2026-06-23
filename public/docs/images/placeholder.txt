@@ -1,0 +1,5 @@
+This folder holds images referenced from questions.json.
+
+Add PNG/JPG assets here and reference them in `questions.json` using a relative path, e.g. "images/performance.png".
+
+Do not include large images; keep size under ~500KB for quick loading in the quiz UI.

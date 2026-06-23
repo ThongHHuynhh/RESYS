@@ -6,6 +6,7 @@
     "generate:config": "python scripts/generate_config_from_excel.py",
     "dev": "vite",
     "dev:server": "node server.js",
+    "prebuild": "node scripts/copy_public_assets.js",
     "build": "vite build",
     "preview": "vite preview",
     "start": "node server.js"

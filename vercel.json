@@ -1,0 +1,23 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/*.js": {
+      "includeFiles": "docs/questions.json"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/questions",
+      "destination": "/api/questions"
+    },
+    {
+      "source": "/api/evaluate",
+      "destination": "/api/evaluate"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
