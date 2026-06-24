@@ -349,6 +349,7 @@ input {
 
 .image-options {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  align-items: stretch;
 }
 
 .list-options {
@@ -374,6 +375,7 @@ input {
 
 .option-image-card {
   flex-direction: column;
+  height: 100%;
 }
 
 .option-button {
@@ -422,7 +424,8 @@ input {
 }
 
 .image-frame-option {
-  aspect-ratio: 4 / 3;
+  height: clamp(170px, 20vw, 230px);
+  aspect-ratio: auto;
   border-radius: 8px 8px 0 0;
 }
 
@@ -538,7 +541,8 @@ input {
   text-transform: uppercase;
 }
 
-.range-entry input {
+.range-entry input,
+.range-entry select {
   width: 100%;
   border: 1px solid rgba(125, 211, 252, 0.74);
   border-radius: 12px;
@@ -551,9 +555,14 @@ input {
   outline: none;
 }
 
-.range-entry input:focus {
+.range-entry input:focus,
+.range-entry select:focus {
   border-color: var(--blue-600);
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15), 0 10px 24px rgba(8, 47, 73, 0.08);
+}
+
+.range-entry-compact {
+  min-width: min(190px, 100%);
 }
 
 .range-value {
@@ -609,6 +618,13 @@ input {
   display: flex;
   justify-content: space-between;
   margin-top: 12px;
+  color: var(--slate-500);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.range-note {
+  margin: 12px 0 0;
   color: var(--slate-500);
   font-size: 0.9rem;
   font-weight: 700;

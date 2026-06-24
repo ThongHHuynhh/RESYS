@@ -19,8 +19,33 @@ export default function App() {
       if (question.type === 'range' && question.defaultValue !== undefined) {
         defaults[question.id] = question.defaultValue;
       }
+      if (question.waterjetNozzleControl?.answerId) {
+        defaults[question.waterjetNozzleControl.answerId] = question.waterjetNozzleControl.defaultValue || 1;
+      }
     }
     return defaults;
+  };
+
+  const getEffectiveRangeMax = (question, sourceAnswers = answers) => {
+    if (!question?.capacityByTool || !question.capacityQuestionId) return question?.max;
+
+    const selectedTools = sourceAnswers[question.capacityQuestionId];
+    const selectedToolIds = Array.isArray(selectedTools) ? selectedTools : selectedTools ? [selectedTools] : [];
+    const capacities = selectedToolIds
+      .map((toolId) => {
+        const capacity = question.capacityByTool[toolId];
+        if (!capacity) return null;
+        if (toolId === 'waterjet_tool' && question.waterjetNozzleControl) {
+          const control = question.waterjetNozzleControl;
+          const nozzleCount = Number(sourceAnswers[control.answerId] || control.defaultValue || 1);
+          return Math.min(control.maxCutsPerMinute, Math.max(control.min || 1, nozzleCount) * control.perNozzleCutsPerMinute);
+        }
+        return capacity.maxCutsPerMinute;
+      })
+      .filter((value) => Number.isFinite(Number(value)));
+
+    if (!capacities.length) return question.max;
+    return Math.min(question.max, Math.max(...capacities));
   };
 
   useEffect(() => {
@@ -67,6 +92,14 @@ export default function App() {
         pruned[question.id] = value.filter((optionId) => !getDisabledReason(question.id, optionId, pruned));
       } else if (value && getDisabledReason(question.id, value, pruned)) {
         delete pruned[question.id];
+      }
+
+      if (question.type === 'range' && pruned[question.id] !== undefined) {
+        const max = getEffectiveRangeMax(question, pruned);
+        const numericValue = Number(pruned[question.id]);
+        if (Number.isFinite(numericValue)) {
+          pruned[question.id] = Math.min(max, Math.max(question.min, numericValue));
+        }
       }
     }
 
@@ -209,6 +242,7 @@ export default function App() {
           onSelect={handleSelect}
           onSubmit={() => submitAnswers(answers)}
           questionsCount={questionsData.questions.length}
+          getEffectiveRangeMax={getEffectiveRangeMax}
           resolveImageSrc={resolveImageSrc}
         />
       )}

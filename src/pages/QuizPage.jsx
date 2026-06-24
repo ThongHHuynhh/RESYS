@@ -7,6 +7,7 @@ export default function QuizPage({
   currentQuestion,
   currentQuestionIndex,
   error,
+  getEffectiveRangeMax,
   getDisabledReason,
   onBack,
   onNext,
@@ -23,6 +24,7 @@ export default function QuizPage({
         answers={answers}
         currentQuestion={currentQuestion}
         currentQuestionIndex={currentQuestionIndex}
+        getEffectiveRangeMax={getEffectiveRangeMax}
         getDisabledReason={getDisabledReason}
         onBack={onBack}
         onNext={onNext}

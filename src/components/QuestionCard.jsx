@@ -6,6 +6,7 @@ export default function QuestionCard({
   answers,
   currentQuestion,
   currentQuestionIndex,
+  getEffectiveRangeMax,
   getDisabledReason,
   onBack,
   onNext,
@@ -17,12 +18,19 @@ export default function QuestionCard({
   const isMulti = currentQuestion.type === 'multi';
   const isRange = currentQuestion.type === 'range';
   const display = currentQuestion.display || (currentQuestion.type === 'single' ? 'image' : 'list');
+  const effectiveMax = getEffectiveRangeMax?.(currentQuestion, answers) ?? currentQuestion.max;
   const rangeValue = selectedAnswer ?? currentQuestion.defaultValue ?? currentQuestion.min;
+  const waterjetControl = currentQuestion.waterjetNozzleControl;
+  const selectedTools = answers[currentQuestion.capacityQuestionId];
+  const hasWaterjet = Array.isArray(selectedTools) ? selectedTools.includes('waterjet_tool') : selectedTools === 'waterjet_tool';
+  const waterjetNozzles = Number(answers[waterjetControl?.answerId] || waterjetControl?.defaultValue || 1);
   const clampRangeValue = (value) => {
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return currentQuestion.min;
-    return Math.min(currentQuestion.max, Math.max(currentQuestion.min, numericValue));
+    return Math.min(effectiveMax, Math.max(currentQuestion.min, numericValue));
   };
+  const displayedRangeValue = rangeValue === '' ? '' : clampRangeValue(rangeValue);
+  const sliderRangeValue = displayedRangeValue === '' ? currentQuestion.min : displayedRangeValue;
 
   const isSelected = (optionId) => {
     if (Array.isArray(selectedAnswer)) return selectedAnswer.includes(optionId);
@@ -60,28 +68,51 @@ export default function QuestionCard({
               <span>Maximum rate</span>
               <input
                 aria-label={`${currentQuestion.text} value`}
-                max={currentQuestion.max}
+                max={effectiveMax}
                 min={currentQuestion.min}
                 step={currentQuestion.step || 1}
                 type="number"
-                value={rangeValue}
+                value={displayedRangeValue}
                 onBlur={(event) => onSelect(currentQuestion.id, clampRangeValue(event.target.value))}
                 onChange={(event) => onSelect(currentQuestion.id, event.target.value)}
               />
             </label>
+            {hasWaterjet && waterjetControl && (
+              <label className="range-entry range-entry-compact">
+                <span>{waterjetControl.label}</span>
+                <select
+                  aria-label={waterjetControl.label}
+                  value={waterjetNozzles}
+                  onChange={(event) => onSelect(waterjetControl.answerId, Number(event.target.value))}
+                >
+                  {Array.from({ length: waterjetControl.max - waterjetControl.min + 1 }, (_, index) => {
+                    const nozzleCount = waterjetControl.min + index;
+                    const capacity = Math.min(
+                      waterjetControl.maxCutsPerMinute,
+                      nozzleCount * waterjetControl.perNozzleCutsPerMinute,
+                    );
+                    return (
+                      <option key={nozzleCount} value={nozzleCount}>
+                        {nozzleCount} - {capacity} {currentQuestion.unit}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+            )}
             <div className="range-value">
-              <strong>{rangeValue}</strong>
+              <strong>{displayedRangeValue}</strong>
               <span>{currentQuestion.unit}</span>
             </div>
           </div>
           <input
             aria-label={currentQuestion.text}
             className="range-input"
-            max={currentQuestion.max}
+            max={effectiveMax}
             min={currentQuestion.min}
             step={currentQuestion.step || 1}
             type="range"
-            value={clampRangeValue(rangeValue)}
+            value={sliderRangeValue}
             onChange={(event) => onSelect(currentQuestion.id, Number(event.target.value))}
           />
           <div className="range-labels">
@@ -89,9 +120,14 @@ export default function QuestionCard({
               {currentQuestion.min} {currentQuestion.unit}
             </span>
             <span>
-              {currentQuestion.max} {currentQuestion.unit}
+              {effectiveMax} {currentQuestion.unit}
             </span>
           </div>
+          {currentQuestion.capacityByTool && (
+            <p className="range-note">
+              Maximum rate is limited by the selected scoring tool{hasWaterjet ? ' and nozzle count' : ''}.
+            </p>
+          )}
         </div>
       ) : (
         <div className={`option-grid ${display === 'image' ? 'image-options' : 'list-options'}`}>

@@ -69,6 +69,17 @@ export default function RecommendationPanel({ result }) {
           </ul>
         </div>
       )}
+
+      {result.capacityNotes?.length > 0 && (
+        <div className="scope-list">
+          <h3>Capacity notes</h3>
+          <ul>
+            {result.capacityNotes.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

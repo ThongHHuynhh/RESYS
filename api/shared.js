@@ -32,6 +32,13 @@ function answerIncludes(value, expected) {
   return value === expected;
 }
 
+function calculateWaterjetCapacity(answers, rule) {
+  const nozzleCount = Number(answers[rule.nozzleAnswerId] || 1);
+  const perNozzle = Number(rule.perNozzleCutsPerMinute || 120);
+  const maxCuts = Number(rule.maxCutsPerMinute || 600);
+  return Math.min(maxCuts, Math.max(1, nozzleCount) * perNozzle);
+}
+
 function matchesRule(answers, rule) {
   if (!rule) return false;
 
@@ -45,6 +52,8 @@ function matchesRule(answers, rule) {
       return answer !== expected;
     case 'includes':
       return answerIncludes(answer, expected);
+    case 'notIncludes':
+      return !answerIncludes(answer, expected);
     case 'includesAny':
       return Array.isArray(expected) && expected.some((item) => answerIncludes(answer, item));
     case 'includesAll':
@@ -55,9 +64,29 @@ function matchesRule(answers, rule) {
       return Number(answer) >= Number(expected);
     case 'between':
       return Number(answer) >= Number(rule.min) && Number(answer) <= Number(rule.max);
+    case 'lteDynamicCapacity': {
+      const selectedTools = answers[rule.capacityQuestionId];
+      if (rule.toolId && !answerIncludes(selectedTools, rule.toolId)) return false;
+      return Number(answer) <= calculateWaterjetCapacity(answers, rule);
+    }
+    case 'gtDynamicCapacity': {
+      const selectedTools = answers[rule.capacityQuestionId];
+      if (rule.toolId && !answerIncludes(selectedTools, rule.toolId)) return false;
+      return Number(answer) > calculateWaterjetCapacity(answers, rule);
+    }
     default:
       return false;
   }
+}
+
+function getCapacityNotes(answers, recommendation) {
+  return (recommendation.rules || [])
+    .filter((rule) => rule.operator === 'lteDynamicCapacity')
+    .map((rule) => {
+      const capacity = calculateWaterjetCapacity(answers, rule);
+      const nozzles = Number(answers[rule.nozzleAnswerId] || 1);
+      return `${rule.label}: ${capacity} cuts/min with ${nozzles} waterjet nozzle${nozzles === 1 ? '' : 's'}.`;
+    });
 }
 
 function legacyConditionsToRules(conditions) {
@@ -118,6 +147,7 @@ function evaluateRecommendation(answers, recommendation) {
     fitScore,
     ruleMatchScore: ruleCount > 0 ? Math.round((matchedCount / ruleCount) * 100) : 0,
     matchedRules: matchedRules.map((rule) => rule.label || rule.questionId),
+    capacityNotes: getCapacityNotes(answers, recommendation),
   };
 }
 
