@@ -5,6 +5,7 @@ import QuizPage from './pages/QuizPage.jsx';
 import ResultPage from './pages/ResultPage.jsx';
 
 export default function App() {
+  const currentYear = new Date().getFullYear();
   const [questionsData, setQuestionsData] = useState(null);
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
@@ -20,7 +21,8 @@ export default function App() {
         defaults[question.id] = question.defaultValue;
       }
       if (question.waterjetNozzleControl?.answerId) {
-        defaults[question.waterjetNozzleControl.answerId] = question.waterjetNozzleControl.defaultValue || 1;
+        defaults[question.waterjetNozzleControl.answerId] =
+          question.waterjetNozzleControl.fixedValue || question.waterjetNozzleControl.defaultValue || 1;
       }
     }
     return defaults;
@@ -37,7 +39,8 @@ export default function App() {
         if (!capacity) return null;
         if (toolId === 'waterjet_tool' && question.waterjetNozzleControl) {
           const control = question.waterjetNozzleControl;
-          const nozzleCount = Number(sourceAnswers[control.answerId] || control.defaultValue || 1);
+          if (control.hideControl) return capacity.maxCutsPerMinute;
+          const nozzleCount = Number(control.fixedValue || sourceAnswers[control.answerId] || control.defaultValue || 1);
           return Math.min(control.maxCutsPerMinute, Math.max(control.min || 1, nozzleCount) * control.perNozzleCutsPerMinute);
         }
         return capacity.maxCutsPerMinute;
@@ -259,7 +262,7 @@ export default function App() {
         />
       )}
 
-      <div className="footer">Question logic is stored in docs/questions.json and can be updated by admin staff.</div>
+      <div className="footer">ABI LTD {currentYear}.</div>
     </div>
   );
 }

@@ -238,6 +238,9 @@ input {
 }
 
 .question-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
@@ -326,6 +329,10 @@ input {
   font-weight: 900;
 }
 
+.tooltip-popover span:last-child {
+  white-space: pre-line;
+}
+
 .option-grid {
   display: grid;
   gap: 10px;
@@ -339,12 +346,34 @@ input {
   position: absolute;
   top: 12px;
   right: 12px;
-  z-index: 4;
+  z-index: 30;
   margin: 0;
 }
 
 .option-shell .tooltip-popover {
+  top: auto;
+  bottom: calc(100% + 10px);
   max-width: calc(100vw - 32px);
+  background: var(--white);
+  box-shadow: 0 18px 42px rgba(8, 47, 73, 0.24);
+  transform: translate(-50%, 4px);
+}
+
+.option-shell .tooltip-info:hover .tooltip-popover,
+.option-shell .tooltip-trigger:focus + .tooltip-popover {
+  transform: translate(-50%, 0);
+}
+
+.option-shell .tooltip-align-left .tooltip-popover,
+.option-shell .tooltip-align-right .tooltip-popover {
+  transform: translate(0, 4px);
+}
+
+.option-shell .tooltip-align-left:hover .tooltip-popover,
+.option-shell .tooltip-align-left .tooltip-trigger:focus + .tooltip-popover,
+.option-shell .tooltip-align-right:hover .tooltip-popover,
+.option-shell .tooltip-align-right .tooltip-trigger:focus + .tooltip-popover {
+  transform: translate(0, 0);
 }
 
 .image-options {
@@ -555,6 +584,17 @@ input {
   outline: none;
 }
 
+.fixed-range-entry strong {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #7dd3fcbd;
+  border-radius: 12px;
+  background: #ffffffad;
+  color: var(--blue-950);
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
 .range-entry input:focus,
 .range-entry select:focus {
   border-color: var(--blue-600);
@@ -735,6 +775,20 @@ input {
   font-size: 0.8rem;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.recommendation-grid small {
+  display: block;
+  color: var(--slate-500);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.score-summary {
+  color: var(--slate-700);
+  margin: 0 0 10px;
+  font-weight: 800;
 }
 
 .recommendation-grid {

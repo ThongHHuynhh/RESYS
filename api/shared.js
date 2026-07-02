@@ -5,6 +5,7 @@ const { execFileSync } = require('child_process');
 const rootPath = path.join(__dirname, '..');
 const docsPath = path.join(rootPath, 'docs');
 const questionsPath = path.join(docsPath, 'questions.json');
+const robotAveragesPath = path.join(docsPath, 'robotAverages.json');
 const workbookPath = path.join(rootPath, 'src', 'Equipment Configurator.xlsx');
 const generatorPath = path.join(rootPath, 'scripts', 'generate_config_from_excel.py');
 
@@ -27,13 +28,24 @@ function loadQuestions() {
   }
 }
 
+function loadRobotAverages() {
+  try {
+    const content = fs.readFileSync(robotAveragesPath, 'utf8');
+    return JSON.parse(content);
+  } catch (error) {
+    console.error('Failed to load robotAverages.json:', error);
+    return {};
+  }
+}
+
 function answerIncludes(value, expected) {
   if (Array.isArray(value)) return value.includes(expected);
   return value === expected;
 }
 
 function calculateWaterjetCapacity(answers, rule) {
-  const nozzleCount = Number(answers[rule.nozzleAnswerId] || 1);
+  if (rule.fixedCapacityCutsPerMinute) return Number(rule.fixedCapacityCutsPerMinute);
+  const nozzleCount = Number(rule.fixedNozzleCount || answers[rule.nozzleAnswerId] || 1);
   const perNozzle = Number(rule.perNozzleCutsPerMinute || 120);
   const maxCuts = Number(rule.maxCutsPerMinute || 600);
   return Math.min(maxCuts, Math.max(1, nozzleCount) * perNozzle);
@@ -79,14 +91,62 @@ function matchesRule(answers, rule) {
   }
 }
 
-function getCapacityNotes(answers, recommendation) {
-  return (recommendation.rules || [])
-    .filter((rule) => rule.operator === 'lteDynamicCapacity')
-    .map((rule) => {
-      const capacity = calculateWaterjetCapacity(answers, rule);
-      const nozzles = Number(answers[rule.nozzleAnswerId] || 1);
-      return `${rule.label}: ${capacity} cuts/min with ${nozzles} waterjet nozzle${nozzles === 1 ? '' : 's'}.`;
-    });
+function getRobotWidthLayout(answers) {
+  switch (answers.conveyor_width) {
+    case 'less_than_48_inches':
+      return '1 robot in width max';
+    case 'between_48_and_60_inches':
+      return '1 or 2 robots in width';
+    case 'more_than_60_inches':
+      return '2 robots in width';
+    default:
+      return '';
+  }
+}
+
+function getRecommendationToolId(recommendation) {
+  const rules = recommendation.rules || legacyConditionsToRules(recommendation.conditions || recommendation.answers);
+  const toolRule = rules.find((rule) => rule.questionId === 'tool_options' && rule.operator === 'includes');
+  return typeof toolRule?.value === 'string' ? toolRule.value : '';
+}
+
+function getCutsPerRobot(robotAverages, toolId) {
+  return Number(robotAverages?.[toolId]?.cutsPerRobotPerMinute || 0);
+}
+
+function getRequiredRobotCount(answers, recommendation, questions, robotAverages) {
+  const toolId = getRecommendationToolId(recommendation);
+  const requestedCutsPerMinute = Number(answers.production_rate);
+  const cutsPerRobot = getCutsPerRobot(robotAverages, toolId);
+
+  if (!Number.isFinite(requestedCutsPerMinute) || requestedCutsPerMinute <= 0 || !cutsPerRobot) {
+    return null;
+  }
+
+  const count = Math.max(1, Math.ceil(requestedCutsPerMinute / cutsPerRobot));
+  return {
+    count,
+    cutsPerRobot,
+    requestedCutsPerMinute,
+    label: `${count} robot${count === 1 ? '' : 's'}`,
+    note: `${requestedCutsPerMinute} cuts/min / ${cutsPerRobot} cuts/min per robot`,
+  };
+}
+
+function getDynamicRecommendationName(result, toolId, requiredRobotCount) {
+  if (!requiredRobotCount) return result.name;
+
+  const robotLabel = requiredRobotCount.label;
+  switch (toolId) {
+    case 'ultrasonic_drag_blade':
+      return `${robotLabel} with drag blade`;
+    case 'ultrasonic_plunge_blade':
+      return `${robotLabel} with plunge blade`;
+    case 'waterjet_tool':
+      return `${robotLabel} with waterjet scoring tool`;
+    default:
+      return result.name;
+  }
 }
 
 function legacyConditionsToRules(conditions) {
@@ -108,8 +168,11 @@ function legacyConditionsToRules(conditions) {
   });
 }
 
-function evaluateRecommendation(answers, recommendation) {
+function evaluateRecommendation(answers, recommendation, questions, robotAverages) {
   const result = recommendation.result || recommendation;
+  const toolId = getRecommendationToolId(recommendation);
+  const robotWidthLayout = getRobotWidthLayout(answers);
+  const requiredRobotCount = getRequiredRobotCount(answers, recommendation, questions, robotAverages);
   const rules = recommendation.rules || legacyConditionsToRules(recommendation.conditions || recommendation.answers);
   const requiredRules = recommendation.requiredRules || [];
   const disqualifiers = recommendation.disqualifiers || [];
@@ -137,9 +200,23 @@ function evaluateRecommendation(answers, recommendation) {
   const fitScore = maxScore > 0 ? Math.min(100, Math.round((rawScore / maxScore) * 100)) : 0;
   const ruleCount = rules.length + requiredRules.length;
   const matchedCount = matchedRules.length + requiredRules.length;
+  const scoreDetails = rules.map((rule) => {
+    const matched = matchedRules.includes(rule);
+    return {
+      label: rule.label || rule.questionId,
+      matched,
+      score: matched ? Number(rule.score || 0) : 0,
+      maxScore: Number(rule.score || 0),
+    };
+  });
 
   return {
-    result,
+    result: {
+      ...result,
+      name: getDynamicRecommendationName(result, toolId, requiredRobotCount),
+      robotWidthLayout,
+      requiredRobotCount,
+    },
     available: true,
     matchedCount,
     ruleCount,
@@ -147,12 +224,15 @@ function evaluateRecommendation(answers, recommendation) {
     fitScore,
     ruleMatchScore: ruleCount > 0 ? Math.round((matchedCount / ruleCount) * 100) : 0,
     matchedRules: matchedRules.map((rule) => rule.label || rule.questionId),
-    capacityNotes: getCapacityNotes(answers, recommendation),
+    scoreDetails,
+    scoreSummary: `${rawScore} of ${maxScore} points = ${fitScore}% fit score`,
   };
 }
 
-function evaluateConfigs(answers, questions, recommendationRules) {
-  const recommendations = recommendationRules.map((recommendation) => evaluateRecommendation(answers, recommendation));
+function evaluateConfigs(answers, questions, recommendationRules, robotAverages = {}) {
+  const recommendations = recommendationRules.map((recommendation) =>
+    evaluateRecommendation(answers, recommendation, questions, robotAverages),
+  );
 
   recommendations.sort((a, b) => {
     if (Number(b.available) !== Number(a.available)) return Number(b.available) - Number(a.available);
@@ -166,8 +246,9 @@ function evaluateConfigs(answers, questions, recommendationRules) {
 
 function evaluateAnswers(answers) {
   const data = loadQuestions();
+  const robotAverages = loadRobotAverages();
   const recommendationRules = data.recommendations || data.configMapping || [];
-  const recommendations = evaluateConfigs(answers, data.questions || [], recommendationRules);
+  const recommendations = evaluateConfigs(answers, data.questions || [], recommendationRules, robotAverages);
 
   if (!recommendations.length || !recommendations[0].available || recommendations[0].matchedCount <= 0) {
     return {
@@ -185,4 +266,5 @@ module.exports = {
   evaluateAnswers,
   evaluateConfigs,
   loadQuestions,
+  loadRobotAverages,
 };

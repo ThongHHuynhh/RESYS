@@ -5,8 +5,7 @@ export default function LandingPage({ onStart }) {
         <p className="eyebrow">Katana II equipment configurator</p>
         {/* <h1>Find the right scoring setup for your customer.</h1> */}
         <p>
-          Walk through support type, product behavior, tooling, production rate, and conveyor width to produce a
-          recommendation from ABI's configurator logic.
+          Walk through a couple of simple questions to find the Katana II configuration that best suits your needs
         </p>
         <button className="button primary landing-start" type="button" onClick={onStart}>
           Start configurator

@@ -18,12 +18,13 @@ export default function QuestionCard({
   const isMulti = currentQuestion.type === 'multi';
   const isRange = currentQuestion.type === 'range';
   const display = currentQuestion.display || (currentQuestion.type === 'single' ? 'image' : 'list');
+  const showQuestionInfo = currentQuestion.showInfoOnQuestion === true;
   const effectiveMax = getEffectiveRangeMax?.(currentQuestion, answers) ?? currentQuestion.max;
   const rangeValue = selectedAnswer ?? currentQuestion.defaultValue ?? currentQuestion.min;
   const waterjetControl = currentQuestion.waterjetNozzleControl;
   const selectedTools = answers[currentQuestion.capacityQuestionId];
   const hasWaterjet = Array.isArray(selectedTools) ? selectedTools.includes('waterjet_tool') : selectedTools === 'waterjet_tool';
-  const waterjetNozzles = Number(answers[waterjetControl?.answerId] || waterjetControl?.defaultValue || 1);
+  const waterjetNozzles = Number(waterjetControl?.fixedValue || answers[waterjetControl?.answerId] || waterjetControl?.defaultValue || 1);
   const clampRangeValue = (value) => {
     const numericValue = Number(value);
     if (!Number.isFinite(numericValue)) return currentQuestion.min;
@@ -50,6 +51,9 @@ export default function QuestionCard({
 
       <div className="question-heading">
         <h1>{currentQuestion.text}</h1>
+        {showQuestionInfo && (
+          <TooltipInfo content={currentQuestion.info} label={`About question ${currentQuestionIndex + 1}`} />
+        )}
       </div>
 
       {currentQuestion.image && (
@@ -77,7 +81,7 @@ export default function QuestionCard({
                 onChange={(event) => onSelect(currentQuestion.id, event.target.value)}
               />
             </label>
-            {hasWaterjet && waterjetControl && (
+            {hasWaterjet && waterjetControl && !waterjetControl.hideControl && (
               <label className="range-entry range-entry-compact">
                 <span>{waterjetControl.label}</span>
                 <select
@@ -99,6 +103,12 @@ export default function QuestionCard({
                   })}
                 </select>
               </label>
+            )}
+            {hasWaterjet && waterjetControl?.hideControl && (
+              <div className="range-entry range-entry-compact fixed-range-entry">
+                <span>{waterjetControl.label}</span>
+                <strong>{waterjetNozzles}</strong>
+              </div>
             )}
             <div className="range-value">
               <strong>{displayedRangeValue}</strong>
@@ -125,7 +135,7 @@ export default function QuestionCard({
           </div>
           {currentQuestion.capacityByTool && (
             <p className="range-note">
-              Maximum rate is limited by the selected scoring tool{hasWaterjet ? ' and nozzle count' : ''}.
+              Maximum rate is limited by the selected scoring tool{hasWaterjet ? ' and fixed waterjet nozzle count' : ''}.
             </p>
           )}
         </div>
@@ -147,7 +157,9 @@ export default function QuestionCard({
                     onSelect(currentQuestion.id, option.id, { multi: isMulti });
                   }}
                 />
-                <TooltipInfo content={option.info || currentQuestion.info} label={`Why choose ${option.text}?`} />
+                {!showQuestionInfo && (
+                  <TooltipInfo content={option.info || currentQuestion.info} label={`Why choose ${option.text}?`} />
+                )}
               </div>
             );
           })}

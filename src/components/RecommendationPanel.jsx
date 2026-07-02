@@ -22,16 +22,22 @@ export default function RecommendationPanel({ result }) {
       </div>
 
       <div className="recommendation-grid">
-        {result.sku && (
-          <div>
-            <span>SKU</span>
-            <strong>{result.sku}</strong>
-          </div>
-        )}
         {result.numberOfRobots && (
           <div>
             <span>Robot layout</span>
             <strong>{result.numberOfRobots}</strong>
+          </div>
+        )}
+        {result.requiredRobotCount && (
+          <div>
+            <span>Robots needed</span>
+            <strong>{result.requiredRobotCount.label}</strong>
+          </div>
+        )}
+        {result.robotWidthLayout && (
+          <div>
+            <span>Robots in width</span>
+            <strong>{result.robotWidthLayout}</strong>
           </div>
         )}
         {result.scoringPatternComplexity && (
@@ -59,23 +65,15 @@ export default function RecommendationPanel({ result }) {
         </div>
       )}
 
-      {result.matchedRules?.length > 0 && (
+      {result.scoreDetails?.length > 0 && (
         <div className="scope-list">
           <h3>Why this matched</h3>
+          {result.scoreSummary && <p className="score-summary">{result.scoreSummary}</p>}
           <ul>
-            {result.matchedRules.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {result.capacityNotes?.length > 0 && (
-        <div className="scope-list">
-          <h3>Capacity notes</h3>
-          <ul>
-            {result.capacityNotes.map((item) => (
-              <li key={item}>{item}</li>
+            {result.scoreDetails.map((item) => (
+              <li key={item.label}>
+                {item.label}: {item.score}/{item.maxScore} points{item.matched ? '' : ' (not matched)'}
+              </li>
             ))}
           </ul>
         </div>

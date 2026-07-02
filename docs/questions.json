@@ -6,6 +6,7 @@
       "excelColumn": "Q1",
       "text": "What type of support do you use to score?",
       "info": "The type of support will affect the tooling option",
+      "showInfoOnQuestion": true,
       "type": "single",
       "required": true,
       "display": "image",
@@ -36,7 +37,7 @@
         },
         {
           "id": "other_type_of_pans_dummy",
-          "text": "Other type of pans dummy",
+          "text": "Others",
           "info": "The type of support will affect the tooling option"
         }
       ]
@@ -52,31 +53,31 @@
       "options": [
         {
           "id": "deep_cuts_5mm",
-          "text": "deep cuts (>5mm)",
+          "text": "Deep cuts (>5mm)",
           "tags": [
             "Limits waterjet"
           ],
-          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+          "info": "Deep cuts require real contact with the dough. It is not possible with contactless tool such as waterjet."
         },
         {
           "id": "highly_hydrated_dough_65_water",
-          "text": "highly hydrated dough (>65% water)",
-          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+          "text": "Highly hydrated dough (>65% water)",
+          "info": "Highly hydrated dough requires contactless tool or tool with cleaning options such as dip tanks"
         },
         {
           "id": "inclusions_with_big_seeds_sunflower_etc",
-          "text": "inclusions with big seeds (sunflower, etc)",
-          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+          "text": "Inclusions with big seeds (sunflower, etc)",
+          "info": "Large seeds inclusions require a blade to cut through the seeds. It does not fit well with a waterjet tool."
         },
         {
           "id": "highly_floured_products_or_belt",
-          "text": "highly floured products or belt",
-          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+          "text": "Highly floured products or belt",
+          "info": "Highly floured products require cleaning options to remove build up on the blade. They also cause a lot of splashes when used with waterjet."
         },
         {
           "id": "very_light_products_50g",
-          "text": "very light products (<50g)",
-          "info": "The option will recommend or even forbid some tools. For examplee, very deep cuts cannot be performed by a waterjet tool"
+          "text": "Very light products (<50g)",
+          "info": "Light products are very sensitive to motion while being scored. Contactless tool are prefered for this."
         },
         {
           "id": "others",
@@ -98,25 +99,19 @@
           "id": "ultrasonic_drag_blade",
           "text": "Ultrasonic drag blade",
           "image": "images/Ultrasonic drag blade.png",
-          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+          "info": "- Scoring rate : Up to 1200 cuts/min \n- Scoring Accuracy: Configurable angles, length and depth of cut \n- Material : Titanium, air-cooled \n- Preferable for deep cuts and products with inclusion"
         },
         {
           "id": "ultrasonic_plunge_blade",
           "text": "Ultrasonic plunge blade",
           "image": "images/Ultrasonic plunge blade.png",
-          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+          "info": "- Scoring rate : Up to 2000 cuts/min \n- Material : Titanium, air-cooled \n- Preferable for unique cut length requiring fast cut rate"
         },
         {
           "id": "waterjet_tool",
           "text": "Waterjet tool",
           "image": "images/waterjet.png",
-          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
-        },
-        {
-          "id": "custom_tool",
-          "text": "Custom tool",
-          "image": "images/test.png",
-          "info": "Tool option is needed to know which options come with it. For example, the waterjet comes with a pump system when ultrasonic drag can come with dip tank"
+          "info": "- Scoring rate: Up to 3600 cuts/min for 10 robots \n- Accuracy: Configurable angles, adjustable pressure \n- Preferable for fast cut rate and contactless scoring"
         }
       ]
     },
@@ -128,7 +123,7 @@
       "type": "range",
       "required": true,
       "min": 20,
-      "max": 2000,
+      "max": 20000,
       "step": 10,
       "defaultValue": 80,
       "unit": "cuts/min",
@@ -136,25 +131,20 @@
       "capacityByTool": {
         "ultrasonic_drag_blade": {
           "label": "Ultrasonic drag blade",
-          "maxCutsPerMinute": 120,
-          "source": "Katana II customer presentation: ultrasonic drag blade scoring rate up to 120 cuts/min"
+          "maxCutsPerMinute": 1200,
+          "source": "Katana II customer presentation: ultrasonic drag blade scoring rate up to 1200 cuts/min"
         },
         "ultrasonic_plunge_blade": {
           "label": "Ultrasonic plunge blade",
-          "maxCutsPerMinute": 200,
-          "source": "Katana II customer presentation: ultrasonic plunge blade scoring rate up to 200 cuts/min"
+          "maxCutsPerMinute": 2000,
+          "source": "Katana II customer presentation: ultrasonic plunge blade scoring rate up to 2000 cuts/min"
         },
         "waterjet_tool": {
           "label": "Waterjet tool",
-          "maxCutsPerMinute": 600,
+          "maxCutsPerMinute": 3600,
           "perNozzleCutsPerMinute": 120,
           "maxNozzles": 5,
-          "source": "Katana II customer presentation: 120 cuts/min per head, 600 cuts/min per tool"
-        },
-        "custom_tool": {
-          "label": "Custom tool",
-          "maxCutsPerMinute": 2000,
-          "source": "Custom engineering review required"
+          "source": "3 nozzle waterjet configuration scaled to 10 robots"
         }
       },
       "waterjetNozzleControl": {
@@ -162,14 +152,16 @@
         "label": "Waterjet nozzles",
         "min": 1,
         "max": 5,
-        "defaultValue": 1,
+        "defaultValue": 3,
+        "fixedValue": 3,
+        "hideControl": true,
         "perNozzleCutsPerMinute": 120,
-        "maxCutsPerMinute": 600
+        "maxCutsPerMinute": 3600
       },
       "options": [
         {
           "id": "between_20_and_2000",
-          "text": "Between 20 and 2000 cuts/min"
+          "text": "Between 20 and 20000 cuts/min"
         }
       ]
     },
@@ -178,6 +170,7 @@
       "excelColumn": "Q5",
       "text": "What is your conveyor width?",
       "info": "The conveyor width will tell if a single or double robotic cell is needed",
+      "showInfoOnQuestion": true,
       "type": "single",
       "required": true,
       "display": "list",
@@ -223,7 +216,7 @@
       "description": "Dynamic fit calculated from workbook-derived scoring rules.",
       "scopeLimitations": [
         "ABB IRB1200 6-axis robot",
-        "120 cuts/min scoring rate from the Katana II customer presentation; 80 cuts/min workbook planning point for simple parallel cuts",
+        "1200 cuts/min scoring rate from the Katana II customer presentation; 80 cuts/min workbook planning point for simple parallel cuts",
         "40 inches on one side of the solution for installation and maintenance purposes",
         "Good option for seeded and floured products",
         "Very clean and accurate cuts thanks to ultrasonic technology",
@@ -247,9 +240,9 @@
         {
           "questionId": "production_rate",
           "operator": "lte",
-          "value": 120,
+          "value": 1200,
           "score": 25,
-          "label": "Production rate fits 120 cuts/min drag-blade maximum"
+          "label": "Production rate fits 1200 cuts/min drag-blade maximum"
         },
         {
           "questionId": "product_settings",
@@ -282,7 +275,7 @@
       "description": "Ultrasonic plunge recommendation for repeatable straight or parallel scoring patterns.",
       "scopeLimitations": [
         "Uses ultrasonic plunge tooling for consistent straight cuts",
-        "200 cuts/min scoring rate from the Katana II customer presentation",
+        "2000 cuts/min scoring rate from the Katana II customer presentation",
         "Best fit for products that benefit from ultrasonic scoring without waterjet"
       ],
       "rules": [
@@ -296,9 +289,9 @@
         {
           "questionId": "production_rate",
           "operator": "lte",
-          "value": 200,
+          "value": 2000,
           "score": 25,
-          "label": "Production rate fits 200 cuts/min plunge-blade maximum"
+          "label": "Production rate fits 2000 cuts/min plunge-blade maximum"
         },
         {
           "questionId": "product_settings",
@@ -328,10 +321,10 @@
       "recommendedOption": "Waterjet scoring tool",
       "numberOfRobots": "Single or double cell depending on conveyor width",
       "scoringPatternComplexity": "Cross and complex scoring patterns",
-      "description": "Waterjet recommendation with capacity calculated from the selected nozzle count.",
+      "description": "Waterjet recommendation with capacity calculated from the fixed 3-nozzle configuration.",
       "scopeLimitations": [
         "120 cuts/min per nozzle/head",
-        "600 cuts/min maximum per waterjet tool",
+        "3600 cuts/min maximum for 10 robots",
         "Not available for deep cuts greater than 5 mm",
         "Requires pump system and waterjet utility review"
       ],
@@ -349,8 +342,10 @@
           "capacityQuestionId": "tool_options",
           "toolId": "waterjet_tool",
           "nozzleAnswerId": "waterjet_nozzles",
+          "fixedNozzleCount": 3,
+          "fixedCapacityCutsPerMinute": 3600,
           "perNozzleCutsPerMinute": 120,
-          "maxCutsPerMinute": 600,
+          "maxCutsPerMinute": 3600,
           "score": 30,
           "label": "Production rate fits selected waterjet nozzle capacity"
         },
@@ -375,47 +370,11 @@
           "capacityQuestionId": "tool_options",
           "toolId": "waterjet_tool",
           "nozzleAnswerId": "waterjet_nozzles",
+          "fixedNozzleCount": 3,
+          "fixedCapacityCutsPerMinute": 3600,
           "perNozzleCutsPerMinute": 120,
-          "maxCutsPerMinute": 600,
+          "maxCutsPerMinute": 3600,
           "message": "Requested cutting rate is above the selected waterjet nozzle capacity."
-        }
-      ]
-    },
-    {
-      "id": "custom_scoring_tool",
-      "name": "Custom scoring tool",
-      "sku": "KATANA-II-CUSTOM",
-      "image": "images/test.png",
-      "recommendedOption": "Custom scoring tool",
-      "numberOfRobots": "Engineering review",
-      "scoringPatternComplexity": "Custom square, star, polka, or special patterns",
-      "description": "Custom recommendation for patterns or rates outside standard tool limits.",
-      "scopeLimitations": [
-        "Requires application engineering review",
-        "Use when the requested rate, support, or scoring pattern exceeds standard tool limits"
-      ],
-      "baseScore": 5,
-      "rules": [
-        {
-          "questionId": "tool_options",
-          "operator": "includes",
-          "value": "custom_tool",
-          "score": 45,
-          "label": "Custom tool selected"
-        },
-        {
-          "questionId": "production_rate",
-          "operator": "gte",
-          "value": 610,
-          "score": 20,
-          "label": "Requested rate is above standard waterjet tool capacity"
-        },
-        {
-          "questionId": "conveyor_width",
-          "operator": "equals",
-          "value": "more_than_60_inches",
-          "score": 15,
-          "label": "Wide conveyor may need a custom cell layout"
         }
       ]
     }

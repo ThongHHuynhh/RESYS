@@ -1,0 +1,15 @@
+{
+  "ultrasonic_drag_blade": {
+    "label": "Ultrasonic drag blade",
+    "cutsPerRobotPerMinute": 90
+  },
+  "ultrasonic_plunge_blade": {
+    "label": "Ultrasonic plunge blade",
+    "cutsPerRobotPerMinute": 130
+  },
+  "waterjet_tool": {
+    "label": "Waterjet tool",
+    "cutsPerRobotPerMinute": 360,
+    "configuration": "3 nozzle config"
+  }
+}

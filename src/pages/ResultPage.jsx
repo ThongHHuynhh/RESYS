@@ -11,7 +11,10 @@ export default function ResultPage({
   resolveImageSrc,
   result,
 }) {
-  const alternativeRecommendations = result?.recommendations?.slice(1, 3) || [];
+  const alternativeRecommendations = (result?.recommendations || [])
+    .slice(1)
+    .filter((recommendation) => recommendation.available && recommendation.fitScore >= 48)
+    .slice(0, 2);
 
   return (
     <main className="result-page">
