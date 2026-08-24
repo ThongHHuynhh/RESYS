@@ -15,13 +15,13 @@ OUTPUT = ROOT / "docs" / "questions.json"
 TOOL_CAPACITY = {
     "ultrasonic_drag_blade": {
         "label": "Ultrasonic drag blade",
-        "maxCutsPerMinute": 120,
-        "source": "Katana II customer presentation: ultrasonic drag blade scoring rate up to 120 cuts/min",
+        "maxCutsPerMinute": 1000,
+        "source": "Ultrasonic drag blade scoring rate up to 1000 cuts/min",
     },
     "ultrasonic_plunge_blade": {
         "label": "Ultrasonic plunge blade",
-        "maxCutsPerMinute": 200,
-        "source": "Katana II customer presentation: ultrasonic plunge blade scoring rate up to 200 cuts/min",
+        "maxCutsPerMinute": 1500,
+        "source": "Ultrasonic plunge blade scoring rate up to 1500 cuts/min",
     },
     "waterjet_tool": {
         "label": "Waterjet tool",
@@ -35,6 +35,11 @@ TOOL_CAPACITY = {
         "maxCutsPerMinute": 2000,
         "source": "Custom engineering review required",
     },
+}
+
+# Workbook rows that should not be offered as answers.
+EXCLUDED_OPTION_IDS = {
+    "support": {"other_type_of_pans_dummy"},
 }
 
 NS = {
@@ -183,7 +188,9 @@ def build_config(rows):
                         "label": "Waterjet nozzles",
                         "min": 1,
                         "max": 5,
-                        "defaultValue": 1,
+                        "defaultValue": 3,
+                        "fixedValue": 3,
+                        "hideControl": True,
                         "perNozzleCutsPerMinute": 120,
                         "maxCutsPerMinute": 600,
                     },
@@ -191,7 +198,9 @@ def build_config(rows):
                 }
             )
         else:
-            question["options"] = with_images(question_id, collect_options(rows, column_index))
+            excluded = EXCLUDED_OPTION_IDS.get(question_id, set())
+            options = [o for o in collect_options(rows, column_index) if o["id"] not in excluded]
+            question["options"] = with_images(question_id, options)
             for option in question["options"]:
                 option["info"] = question["info"]
 

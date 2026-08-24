@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { clampRange, isPendingRangeEntry } from './lib/rangeValue.js';
 import LogoTransition from './components/LogoTransition.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
@@ -85,7 +86,7 @@ export default function App() {
     return match?.message || '';
   };
 
-  const pruneDisabledAnswers = (nextAnswers) => {
+  const pruneDisabledAnswers = (nextAnswers, { clampRanges = true } = {}) => {
     if (!questionsData?.questions) return nextAnswers;
 
     const pruned = { ...nextAnswers };
@@ -97,12 +98,10 @@ export default function App() {
         delete pruned[question.id];
       }
 
-      if (question.type === 'range' && pruned[question.id] !== undefined) {
-        const max = getEffectiveRangeMax(question, pruned);
-        const numericValue = Number(pruned[question.id]);
-        if (Number.isFinite(numericValue)) {
-          pruned[question.id] = Math.min(max, Math.max(question.min, numericValue));
-        }
+      // Only clamp once the entry is committed. Clamping a half-typed value forced an
+      // empty field back up to question.min, which then prefixed the digits still being typed.
+      if (clampRanges && question.type === 'range' && !isPendingRangeEntry(pruned[question.id])) {
+        pruned[question.id] = clampRange(pruned[question.id], question.min, getEffectiveRangeMax(question, pruned));
       }
     }
 
@@ -153,7 +152,10 @@ export default function App() {
       value = Number(optionId);
     }
 
-    const nextAnswers = pruneDisabledAnswers({ ...answers, [questionId]: value });
+    const nextAnswers = pruneDisabledAnswers(
+      { ...answers, [questionId]: value },
+      { clampRanges: question?.type !== 'range' },
+    );
     setAnswers(nextAnswers);
     setError('');
   };
@@ -185,12 +187,15 @@ export default function App() {
       return;
     }
 
+    // Commit any range entry that was still being typed before leaving the question.
+    const committedAnswers = pruneDisabledAnswers(answers);
+    setAnswers(committedAnswers);
     setError('');
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex < questionsData.questions.length) {
       setCurrentQuestionIndex(nextIndex);
     } else {
-      submitAnswers(answers);
+      submitAnswers(committedAnswers);
     }
   };
 

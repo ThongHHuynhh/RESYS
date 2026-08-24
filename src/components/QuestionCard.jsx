@@ -1,3 +1,4 @@
+import { clampRange } from '../lib/rangeValue.js';
 import ImageFrame from './ImageFrame.jsx';
 import OptionButton from './OptionButton.jsx';
 import TooltipInfo from './TooltipInfo.jsx';
@@ -25,13 +26,11 @@ export default function QuestionCard({
   const selectedTools = answers[currentQuestion.capacityQuestionId];
   const hasWaterjet = Array.isArray(selectedTools) ? selectedTools.includes('waterjet_tool') : selectedTools === 'waterjet_tool';
   const waterjetNozzles = Number(waterjetControl?.fixedValue || answers[waterjetControl?.answerId] || waterjetControl?.defaultValue || 1);
-  const clampRangeValue = (value) => {
-    const numericValue = Number(value);
-    if (!Number.isFinite(numericValue)) return currentQuestion.min;
-    return Math.min(effectiveMax, Math.max(currentQuestion.min, numericValue));
-  };
-  const displayedRangeValue = rangeValue === '' ? '' : clampRangeValue(rangeValue);
-  const sliderRangeValue = displayedRangeValue === '' ? currentQuestion.min : displayedRangeValue;
+  const clampRangeValue = (value) => clampRange(value, currentQuestion.min, effectiveMax);
+  // Keep the raw keystrokes in the field while typing. Clamping on every change snapped a
+  // cleared field back to the minimum, so the next digits were appended to it (20 + 600).
+  const typedRangeValue = rangeValue === '' ? '' : String(rangeValue);
+  const sliderRangeValue = typedRangeValue === '' ? currentQuestion.min : clampRangeValue(typedRangeValue);
 
   const isSelected = (optionId) => {
     if (Array.isArray(selectedAnswer)) return selectedAnswer.includes(optionId);
@@ -76,7 +75,7 @@ export default function QuestionCard({
                 min={currentQuestion.min}
                 step={currentQuestion.step || 1}
                 type="number"
-                value={displayedRangeValue}
+                value={typedRangeValue}
                 onBlur={(event) => onSelect(currentQuestion.id, clampRangeValue(event.target.value))}
                 onChange={(event) => onSelect(currentQuestion.id, event.target.value)}
               />
@@ -104,14 +103,8 @@ export default function QuestionCard({
                 </select>
               </label>
             )}
-            {hasWaterjet && waterjetControl?.hideControl && (
-              <div className="range-entry range-entry-compact fixed-range-entry">
-                <span>{waterjetControl.label}</span>
-                <strong>{waterjetNozzles}</strong>
-              </div>
-            )}
             <div className="range-value">
-              <strong>{displayedRangeValue}</strong>
+              <strong>{typedRangeValue === '' ? '--' : typedRangeValue}</strong>
               <span>{currentQuestion.unit}</span>
             </div>
           </div>
@@ -135,7 +128,8 @@ export default function QuestionCard({
           </div>
           {currentQuestion.capacityByTool && (
             <p className="range-note">
-              Maximum rate is limited by the selected scoring tool{hasWaterjet ? ' and fixed waterjet nozzle count' : ''}.
+              Maximum rate is limited by the selected scoring tool.
+              {hasWaterjet && ` Waterjet capacity is based on a ${waterjetNozzles}-nozzle configuration.`}
             </p>
           )}
         </div>
