@@ -104,6 +104,10 @@ function getRobotWidthLayout(answers) {
   }
 }
 
+function getMinimumRobotsForWidth(answers) {
+  return answers.conveyor_width === 'more_than_60_inches' ? 2 : 1;
+}
+
 function getRecommendationToolId(recommendation) {
   const rules = recommendation.rules || legacyConditionsToRules(recommendation.conditions || recommendation.answers);
   const toolRule = rules.find((rule) => rule.questionId === 'tool_options' && rule.operator === 'includes');
@@ -123,13 +127,22 @@ function getRequiredRobotCount(answers, recommendation, questions, robotAverages
     return null;
   }
 
-  const count = Math.max(1, Math.ceil(requestedCutsPerMinute / cutsPerRobot));
+  const throughputCount = Math.max(1, Math.ceil(requestedCutsPerMinute / cutsPerRobot));
+  const minimumForWidth = getMinimumRobotsForWidth(answers);
+  const count = Math.max(throughputCount, minimumForWidth);
+  const throughputNote = `${requestedCutsPerMinute} cuts/min / ${cutsPerRobot} cuts/min per robot`;
+
   return {
     count,
+    throughputCount,
+    minimumForWidth,
     cutsPerRobot,
     requestedCutsPerMinute,
     label: `${count} robot${count === 1 ? '' : 's'}`,
-    note: `${requestedCutsPerMinute} cuts/min / ${cutsPerRobot} cuts/min per robot`,
+    note:
+      minimumForWidth > throughputCount
+        ? `${throughputNote}, raised to ${minimumForWidth} by the conveyor width`
+        : throughputNote,
   };
 }
 
